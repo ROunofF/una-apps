@@ -6,7 +6,7 @@
 
 An interval timer for the [UNA Watch](https://unawatch.com) that **counts your reps by itself**, from
 the motion of your wrist. It learns your movement from your first three reps, then counts every rep
-after them, while it tracks your heart rate and your tempo. EMOM, AMRAP and Tabata, with no tapping
+after them, while it tracks your heart rate and your tempo. Sets, EMOM, AMRAP and Tabata, with no tapping
 and no phone.
 
 <img src="images/hero_3_watches.png" alt="AutoRep on three UNA watches: target hit, counting reps, workout summary" width="800">
@@ -37,7 +37,12 @@ rate and your pace, so you can see where you slowed down.
 - **Heart rate** on the workout screen, and saved with every second of the workout.
 - **Tempo:** your reps per minute over time, and how much you slowed down from the first rounds to
   the last.
-- **Three formats:**
+- **Four formats:**
+  - **Sets**: your target reps, then a fixed rest (30 s to 3 min), as many sets as you choose.
+    The rest starts by itself the moment the last rep counts; R1 ends a set early. Made for
+    form work: the summary shows how long each set took. **Sides 2** for single-leg or
+    single-arm work: left, a short switch countdown, right, then rest, with left and right
+    compared at the end.
   - **EMOM** (Every Minute On the Minute): do your reps at the start of each minute and rest for
     what is left of it. The watch buzzes when you hit your target.
   - **AMRAP** (As Many Reps As Possible): as many reps as you can in a set time.
@@ -57,14 +62,14 @@ rate and your pace, so you can see where you slowed down.
 | Choose a format | Set it up | Finding your rhythm | Counting | Target hit | Summary |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | <img src="images/1_mode.png" width="130"> | <img src="images/2_setup.png" width="130"> | <img src="images/4_finding_rhythm.png" width="130"> | <img src="images/5_counting.png" width="130"> | <img src="images/6_target_hit_rest.png" width="130"> | <img src="images/7_summary.png" width="130"> |
-| EMOM, AMRAP or Tabata | START first: last time's settings are kept | First three reps, in grey, set the baseline | Amber count, heart rate; the ring is the time left | Green: rest until the next minute | Reps per round against the target |
+| Sets, EMOM, AMRAP or Tabata | START first: last time's settings are kept | First three reps, in grey, set the baseline | Amber count, heart rate; the ring is the time left | Green: rest until the next minute | Reps per round against the target |
 
 <!-- UNA phone app screenshot goes here:
 <img src="images/phone_app.png" alt="An AutoRep workout in the UNA phone app" width="300">
 -->
 
 **Buttons:** L1 / L2 = up / down (during a workout: +1 / −1 rep), R1 = select (during a workout:
-pause), R2 = back (during a workout: hold to end). The app opens with a short "by RF" mark; any
+pause; during a set in Sets, end the set), R2 = back (during a workout: hold to end). The app opens with a short "by RF" mark; any
 button skips it.
 
 ## How the counting works
