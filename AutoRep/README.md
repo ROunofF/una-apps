@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/ddd6d20d-d198-4fc9-9e0b-ca3287a7aaf3
-
 <div align="center">
 
 # AutoRep by RF
