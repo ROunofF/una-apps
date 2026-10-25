@@ -2,7 +2,7 @@
 
 # AutoRep by RF
 
-**Your timer counts seconds. AutoRep counts reps.**
+**AutoRep counts reps automagically.**
 
 An interval timer for the [UNA Watch](https://unawatch.com) that **counts your reps by itself**, from
 the motion of your wrist. It learns your movement from your first three reps, then counts every rep
@@ -47,7 +47,7 @@ rate and your pace, so you can see where you slowed down.
 - **Get ready, your way:** a 3, 5, 10 or 20 s countdown before the first round, and a double buzz
   that long before each rest ends, then 3-2-1.
 - **Miscounted?** L1 and L2 add or remove a rep with one press, even during rest.
-- **Remembers your last workout:** open AutoRep and press R1 to start it again.
+- **Remembers your last workout:** open AutoRep and press R1 twice to start it again.
 - **Saved to the UNA phone app:** each workout is an activity with one lap per round, heart rate,
   calories, total reps, reps per lap, and graphs of reps and reps per minute over time.
 - **On the watch:** counting and timing need no phone and no account.
