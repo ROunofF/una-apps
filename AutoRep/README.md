@@ -21,6 +21,11 @@ and no phone.
 
 *Video coming soon.*
 
+[InternetShortcut]
+URL=file:///c%3A/Users/ROunofF/STM32Cube/una-apps-submissions/AutoRep/AutoRep_demo_github.mp4
+
+
+
 ## Why
 
 Interval timers tell you when to work, but you still count reps in your head while out of breath,
