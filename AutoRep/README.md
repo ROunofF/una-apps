@@ -24,9 +24,9 @@ and no phone.
 ## Why
 
 Interval timers tell you when to work, but you still count reps in your head while out of breath,
-and the count is gone when the set ends. AutoRep counts for you. In EMOM it buzzes the moment you
-hit your target, so the rest of the minute is rest. Afterwards it shows reps per round, your heart
-rate and your pace, so you can see where you slowed down.
+and the count is gone when the set ends. AutoRep counts for you. In Sets and EMOM it buzzes the
+moment you hit your target and your rest starts by itself: no button between sets. Afterwards it
+shows reps per round, your heart rate and your pace, so you can see where you slowed down.
 
 ## What it does
 
@@ -53,16 +53,17 @@ rate and your pace, so you can see where you slowed down.
   that long before each rest ends, then 3-2-1.
 - **Miscounted?** L1 and L2 add or remove a rep with one press, even during rest.
 - **Remembers your last workout:** open AutoRep and press R1 twice to start it again.
-- **Saved to the UNA phone app:** each workout is an activity with one lap per round, heart rate,
+- **Saved to the UNA phone app:** each workout is an activity with one lap per round (per side with
+  Sides 2), heart rate,
   calories, total reps, reps per lap, and graphs of reps and reps per minute over time.
 - **On the watch:** counting and timing need no phone and no account.
 
 ## Screens
 
-| Choose a format | Set it up | Finding your rhythm | Counting | Target hit | Summary |
+| Choose a format | Set it up | Finding your rhythm | A set | Target hit | Summary |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="images/1_mode.png" width="130"> | <img src="images/2_setup.png" width="130"> | <img src="images/4_finding_rhythm.png" width="130"> | <img src="images/5_counting.png" width="130"> | <img src="images/6_target_hit_rest.png" width="130"> | <img src="images/7_summary.png" width="130"> |
-| Sets, EMOM, AMRAP or Tabata | START first: last time's settings are kept | First three reps, in grey, set the baseline | Amber count, heart rate; the ring is the time left | Green: rest until the next minute | Reps per round against the target |
+| <img src="images/1_mode.png" width="130"> | <img src="images/2_setup.png" width="130"> | <img src="images/4_finding_rhythm.png" width="130"> | <img src="images/5_sets.png" width="130"> | <img src="images/6_target_hit_rest.png" width="130"> | <img src="images/7_summary.png" width="130"> |
+| Sets, EMOM, AMRAP or Tabata; the amber mark points at your choice | Target, sets, sides and rest; START first, last time's settings kept | First three reps, in grey, set the baseline | Sets: no clock, the time counts up; R1 ends the set | Green: the rest has started | Reps per round against the target |
 
 <!-- UNA phone app screenshot goes here:
 <img src="images/phone_app.png" alt="An AutoRep workout in the UNA phone app" width="300">
@@ -89,8 +90,8 @@ kettlebell swings and jumping jacks.
 
 **Tested:** on 300 simulated sets per exercise (random speed, depth, fatigue, pauses, strap position
 and sensor noise), the count is within one rep of the truth in every clean set, and standing still
-for 30 s adds zero false reps. On a real wrist, squats count once the rhythm locks on, the buzzes
-and the phone-app activity work. The other exercises are tuned on the simulator so far.
+for 30 s adds zero false reps. On a real wrist, squats and presses count once the rhythm locks on,
+the buzzes and the phone-app activity work. The other exercises are tuned on the simulator so far.
 
 ## Coming next
 
