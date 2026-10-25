@@ -19,10 +19,10 @@ and no phone.
      GitHub uploads it and inserts a https://github.com/user-attachments/assets/... link,
      which plays inline. Replace this comment with that link. -->
 
-*Video coming soon.*
 
-[InternetShortcut]
-URL=file:///c%3A/Users/ROunofF/STM32Cube/una-apps-submissions/AutoRep/AutoRep_demo_github.mp4
+https://github.com/user-attachments/assets/15ebbcff-ad35-4596-8453-add1ae42f9e1
+
+
 
 
 
