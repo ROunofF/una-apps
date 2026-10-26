@@ -61,10 +61,15 @@ shows reps per round, your heart rate and your pace, so you can see where you sl
 
 ## Screens
 
-| Choose a format | Set it up | Finding your rhythm | A set | Target hit | Summary |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="images/1_mode.png" width="130"> | <img src="images/2_setup.png" width="130"> | <img src="images/4_finding_rhythm.png" width="130"> | <img src="images/5_sets.png" width="130"> | <img src="images/6_target_hit_rest.png" width="130"> | <img src="images/7_summary.png" width="130"> |
-| Sets, EMOM, AMRAP or Tabata; the amber mark points at your choice | Target, sets, sides and rest; START first, last time's settings kept | First three reps, in grey, set the baseline | Sets: no clock, the time counts up; R1 ends the set | Green: the rest has started | Reps per round against the target |
+| Choose a format | Set it up | Finding your rhythm |
+|:---:|:---:|:---:|
+| <img src="images/1_mode.png" width="220"> | <img src="images/2_setup.png" width="220"> | <img src="images/4_finding_rhythm.png" width="220"> |
+| Sets, EMOM, AMRAP or Tabata | Target, sets, sides, rest | First three reps set the baseline |
+
+| A set | Target hit | Summary |
+|:---:|:---:|:---:|
+| <img src="images/5_sets.png" width="220"> | <img src="images/6_target_hit_rest.png" width="220"> | <img src="images/7_summary.png" width="220"> |
+| No clock: the time counts up | The rest starts by itself | Reps per round against the target |
 
 <!-- UNA phone app screenshot goes here:
 <img src="images/phone_app.png" alt="An AutoRep workout in the UNA phone app" width="300">
