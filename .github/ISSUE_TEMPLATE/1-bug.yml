@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in one of my apps doesn't work the way it should.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The more precise you are, the faster I can fix it.
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app?
+      options:
+        - AutoRep by RF
+        - PomoTimer by RF
+        - AutoRep workout builder (website)
+        - Not sure / more than one
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown at the bottom of the app's setup screen (for example v0.4.1), or in the UNA app's store page.
+      placeholder: v1.0.0
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - On the watch
+        - In the UNA phone app (settings, activities)
+        - On the website
+        - In the simulator
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+      placeholder: "In Sets, the rest started 2 reps before my target of 12."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      description: The screens and buttons you used, in order. Settings matter too (mode, exercise, lengths, habit times).
+      placeholder: |
+        1. Open AutoRep, choose SETS
+        2. Target 12, sets 3, rest 60s
+        3. ...
+  - type: textarea
+    id: media
+    attributes:
+      label: Photo or video
+      description: A photo of the watch screen or a short video helps a lot. Drag files here.
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: Which wrist, the watch firmware version if you know it, how often it happens.

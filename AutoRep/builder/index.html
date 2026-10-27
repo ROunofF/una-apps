@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoRep Workout Builder</title>
+  <meta name="description" content="Build a workout for AutoRep by RF on the UNA Watch, then paste it into the UNA app.">
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <h1><span class="app">AutoRep</span> <span class="sig">by <b class="r">R</b><b class="f">F</b></span></h1>
+      <p class="sub">Workout builder</p>
+    </header>
+
+    <section class="device-wrap" aria-label="Watch preview">
+      <div class="device" id="device">
+        <div class="housing"></div>
+        <button class="hw l1" data-key="L1" aria-label="L1: up"><span>L1</span></button>
+        <button class="hw l2" data-key="L2" aria-label="L2: down"><span>L2</span></button>
+        <button class="hw r1" data-key="R1" aria-label="R1: select"><span>R1</span></button>
+        <button class="hw r2" data-key="R2" aria-label="R2: back"><span>R2</span></button>
+        <div class="glass">
+          <div class="screen" id="screen" aria-hidden="true"></div>
+        </div>
+      </div>
+      <p class="keys">Tap the buttons, or use the keyboard: <kbd>↑</kbd> <kbd>↓</kbd> move or change, <kbd>Enter</kbd> select, <kbd>Esc</kbd> back.</p>
+      <p class="sr-only" id="sr" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <label class="lbl" for="name">Name</label>
+      <div class="row">
+        <input id="name" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="40">
+        <span class="count" id="nameCount">0/12</span>
+      </div>
+      <p class="msg" id="nameMsg"></p>
+    </section>
+
+    <section class="card">
+      <div class="lbl-row">
+        <span class="lbl">Your workout</span>
+        <span class="count" id="bytes">0/128</span>
+      </div>
+      <output class="line" id="line"></output>
+      <button class="copy" id="copy">Copy</button>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <section class="card how">
+      <h2>Put it on your watch</h2>
+      <p>Tap <b>Copy</b>. Open the UNA app on your phone, go to <b>AutoRep</b>'s settings, tap one of <b>Workout 1</b> to <b>Workout 5</b>, paste and save. That's it: the workout shows at the top of AutoRep's mode list on the watch, ready to start.</p>
+    </section>
+
+    <section class="card">
+      <h2>Starters</h2>
+      <div class="starters" id="starters"></div>
+    </section>
+
+    <section class="card">
+      <label class="lbl" for="paste">Load a workout</label>
+      <input id="paste" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste a line like Leg day|SETS SQUAT 3x12 R90">
+      <p class="msg" id="pasteMsg"></p>
+    </section>
+
+    <section class="card">
+      <label class="lbl" for="share">Share link</label>
+      <div class="row">
+        <input id="share" type="text" readonly>
+        <button class="small" id="copyShare">Copy link</button>
+      </div>
+    </section>
+
+    <footer class="foot">AutoRep by RF for the UNA Watch.</footer>
+  </main>
+
+  <script src="workout-format.js"></script>
+  <script src="starters.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

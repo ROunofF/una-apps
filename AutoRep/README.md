@@ -106,6 +106,11 @@ the buzzes and the phone-app activity work. The other exercises are tuned on the
   own format, exercise, target and rest. Built on the watch with the same lists, run as one
   activity, with a summary per block.
 
+## Feedback
+
+Found a bug, or have an idea? [Open an issue](https://github.com/ROunofF/una-apps-submissions/issues/new/choose)
+and pick **AutoRep** in the form.
+
 ---
 
 Made by RF for [UNA's first app competition](https://dev.unawatch.com/t/announcing-unas-first-app-competition-october-2026/113)

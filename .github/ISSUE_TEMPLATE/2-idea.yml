@@ -1,0 +1,34 @@
+name: Idea or request
+description: Something you'd like one of my apps to do, or an idea for a new app.
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app?
+      options:
+        - AutoRep by RF
+        - PomoTimer by RF
+        - AutoRep workout builder (website)
+        - A new app
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What should the app do?
+      placeholder: "Let me pick lunges as an exercise in AutoRep."
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it would help you
+      description: When would you use it? What do you do today instead?
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: Sketches, screenshots, or a link to an app that does it well.

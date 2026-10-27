@@ -1,0 +1,39 @@
+name: Feedback or question
+description: Tell me how an app works for you, or ask how something works.
+title: "[Feedback] "
+labels: ["question"]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app?
+      options:
+        - AutoRep by RF
+        - PomoTimer by RF
+        - AutoRep workout builder (website)
+        - All of them
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feedback?
+      options:
+        - Something I like
+        - Something confusing or hard to use
+        - A question
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Your feedback
+      description: Which screen or feature, and what you think. Short is fine.
+    validations:
+      required: true
+  - type: input
+    id: usage
+    attributes:
+      label: How do you use it? (optional)
+      placeholder: "3 times a week, mostly squats and swings"
