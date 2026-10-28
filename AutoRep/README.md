@@ -18,9 +18,7 @@ and no phone.
 <!-- To embed the video: edit this file on github.com and drag the .mp4 onto this spot.
      GitHub uploads it and inserts a https://github.com/user-attachments/assets/... link,
      which plays inline. Replace this comment with that link. -->
-
-
-https://github.com/user-attachments/assets/d6ea0852-69c4-43bc-b433-a9aeaea78f6a
+https://github.com/user-attachments/assets/449603a7-b749-471a-8bf9-ad2bb8a55d8e
 
 ## Why
 
