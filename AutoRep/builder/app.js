@@ -1,383 +1,121 @@
 /*
- * AutoRep workout builder: a copy of the watch's Mode and Setup screens that
- * writes the one-line workout for the UNA app's "Workout" fields.
+ * AutoRep workout builder: one card per workout. A workout is one or more
+ * exercise blocks (AutoRep 1.2), written as one line (workout-format.js). A
+ * line over 128 bytes continues in the next "Workout N" field, so a card
+ * takes as many fields as its line needs, and the cards number the fields in
+ * order (Workout 1-2 for card 1, then Workout 3 for card 2...).
  *
- * Buttons follow the watch (AGENT_APPDESIGN.md): L1 up / +, L2 down / -,
- * R1 select / edit / done, R2 back. The START row is COPY here.
+ * Kept in the page: the hash (share link, one whole workout per line) and
+ * localStorage (so the page reopens where you left it).
  */
 (function () {
   'use strict';
   var WF = window.WorkoutFormat;
+  var FIELDS = WF.FIELDS;
+  var STORE_KEY = 'autorep-builder-v3';
+  var OLD_STORE_KEY = 'autorep-builder-v2';   // one exercise per card
+  // Shown on a workout with more than one exercise until 1.2 is on the store.
+  var NEEDS_12 = 'Needs AutoRep 1.2 on the watch.';
 
-  // ---- State: one value per setting per mode, like the watch's Model ----
-  var state = {
-    name: 'My workout',
-    mode: 'SETS',
-    exercise: 'SQUAT',
-    setsReps: 12, setsCount: 3, sides: 1, restS: 60,
-    emomReps: 12, emomMinutes: 10,
-    amrapMinutes: 5,
-    tabataRounds: 8,
-    getReadyS: 3,
-  };
-
-  // Watch UI state
-  var ui = { screen: 'mode', modeSel: 0, setupSel: 0, editing: false, flash: null, flashTimer: 0 };
-
+  var MODE_LABEL = { SETS: 'Sets', EMOM: 'EMOM', AMRAP: 'AMRAP', TABATA: 'Tabata' };
   var MODE_INFO = {
-    SETS: 'Target reps, then rest',
-    EMOM: 'New set every minute',
-    AMRAP: 'As many reps as possible',
-    TABATA: '20s work, 10s rest',
+    SETS: 'Your target reps, then a rest. Repeat for each set.',
+    EMOM: 'Every minute on the minute: your reps, then rest until the next minute.',
+    AMRAP: 'As many reps as possible in the time.',
+    TABATA: '20 s of work, 10 s of rest, per round.',
   };
-  var EXERCISE_NAME = { SQUAT: 'SQUATS', CURL: 'CURLS', PRESS: 'PRESS', SWING: 'SWINGS', JACK: 'JACKS' };
-  var ONE_ARM = { CURL: true, PRESS: true, SWING: true };
+  var EXERCISE_LABEL = { SQUAT: 'Squats', CURL: 'Curls', PRESS: 'Press', SWING: 'Swings', JACK: 'Jacks' };
+  // Same words as the watch's detail line (Model::exerciseShort).
+  var EXERCISE_SHORT = { SQUAT: 'squats', CURL: 'curls', PRESS: 'press', SWING: 'swings', JACK: 'jacks' };
+  var SECONDS_PER_REP = 3; // for the time estimate only
 
-  // Seconds per rep, for the timeline estimate only.
-  var SECONDS_PER_REP = 3;
+  function blankBlock() {
+    return {
+      mode: 'SETS', exercise: 'SQUAT',
+      setsReps: 12, setsCount: 3, sides: 1, restS: 60,
+      emomReps: 12, emomMinutes: 10,
+      amrapMinutes: 5,
+      tabataRounds: 8,
+      getReadyS: 3,
+      restAfterS: 0,
+    };
+  }
+
+  function blank(name) {
+    return { name: name || '', blocks: [blankBlock()], open: 0 };
+  }
+
+  var slots = [];
 
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-
-  // Steps through a list of choices, stopping at the ends (watch: REST, GET READY).
-  function stepOption(list, cur, delta) {
-    var i = 0;
-    while (i < list.length - 1 && list[i] < cur) i++;
-    return list[clamp(i + delta, 0, list.length - 1)];
-  }
-
-  // ---- Workout <-> state ----
-  function workout() {
-    var w = { name: state.name.trim(), mode: state.mode, exercise: state.exercise, getReadyS: state.getReadyS };
-    switch (state.mode) {
-      case 'SETS': w.sets = state.setsCount; w.reps = state.setsReps; w.restS = state.restS; w.sides = state.sides; break;
-      case 'EMOM': w.minutes = state.emomMinutes; w.reps = state.emomReps; break;
-      case 'AMRAP': w.minutes = state.amrapMinutes; break;
-      case 'TABATA': w.rounds = state.tabataRounds; break;
-    }
-    return w;
-  }
-
-  function load(w) {
-    state.name = w.name;
-    state.mode = w.mode;
-    state.exercise = w.exercise;
-    state.getReadyS = w.getReadyS;
-    switch (w.mode) {
-      case 'SETS': state.setsCount = w.sets; state.setsReps = w.reps; state.restS = w.restS; state.sides = w.sides; break;
-      case 'EMOM': state.emomMinutes = w.minutes; state.emomReps = w.reps; break;
-      case 'AMRAP': state.amrapMinutes = w.minutes; break;
-      case 'TABATA': state.tabataRounds = w.rounds; break;
-    }
-    ui.screen = 'setup';
-    ui.setupSel = 0;
-    ui.editing = false;
-    ui.modeSel = WF.MODES.indexOf(w.mode);
-    nameInput.value = state.name;
-  }
-
-  // ---- Setup fields ----
-  function fields() {
-    var f = ['COPY', 'EXERCISE'];
-    switch (state.mode) {
-      case 'SETS': f.push('TARGET', 'SETS', 'SIDES', 'REST'); break;
-      case 'EMOM': f.push('TARGET', 'MINUTES'); break;
-      case 'AMRAP': f.push('MINUTES'); break;
-      default: f.push('ROUNDS'); break;
-    }
-    f.push('GET READY');
-    return f;
-  }
-
-  function fieldValue(f) {
-    switch (f) {
-      case 'EXERCISE': return EXERCISE_NAME[state.exercise];
-      case 'TARGET': return String(state.mode === 'SETS' ? state.setsReps : state.emomReps);
-      case 'SETS': return String(state.setsCount);
-      case 'SIDES': return String(state.sides);
-      case 'REST': return state.restS + 's';
-      case 'MINUTES': return String(state.mode === 'EMOM' ? state.emomMinutes : state.amrapMinutes);
-      case 'ROUNDS': return String(state.tabataRounds);
-      case 'GET READY': return state.getReadyS + 's';
-    }
-    return '';
-  }
-
-  function change(f, delta) {
-    var L = WF.LIMITS;
-    switch (f) {
-      case 'EXERCISE': {
-        var n = WF.EXERCISES.length;
-        state.exercise = WF.EXERCISES[(WF.EXERCISES.indexOf(state.exercise) + delta + n) % n];
-        break;
-      }
-      case 'TARGET':
-        if (state.mode === 'SETS') state.setsReps = clamp(state.setsReps + delta, L.reps[0], L.reps[1]);
-        else state.emomReps = clamp(state.emomReps + delta, L.reps[0], L.reps[1]);
-        break;
-      case 'SETS': {
-        var max = state.sides === 2 ? L.setsCountTwoSides[1] : L.setsCount[1];
-        state.setsCount = clamp(state.setsCount + delta, 1, max);
-        break;
-      }
-      case 'SIDES':
-        state.sides = state.sides === 2 ? 1 : 2; // L1 and L2 both flip it
-        if (state.sides === 2) state.setsCount = Math.min(state.setsCount, L.setsCountTwoSides[1]);
-        break;
-      case 'REST': state.restS = stepOption(WF.REST_OPTIONS, state.restS, delta); break;
-      case 'MINUTES':
-        if (state.mode === 'EMOM') state.emomMinutes = clamp(state.emomMinutes + delta, L.emomMinutes[0], L.emomMinutes[1]);
-        else state.amrapMinutes = clamp(state.amrapMinutes + delta, L.amrapMinutes[0], L.amrapMinutes[1]);
-        break;
-      case 'ROUNDS': state.tabataRounds = clamp(state.tabataRounds + delta, L.tabataRounds[0], L.tabataRounds[1]); break;
-      case 'GET READY': state.getReadyS = stepOption(WF.GET_READY_OPTIONS, state.getReadyS, delta); break;
-    }
-  }
-
-  // ---- Buttons ----
-  function press(key) {
-    var btn = document.querySelector('.hw[data-key="' + key + '"]');
-    if (btn) {
-      btn.classList.add('pressed');
-      setTimeout(function () { btn.classList.remove('pressed'); }, 120);
-    }
-    if (ui.screen === 'mode') {
-      var n = WF.MODES.length; // 4 items: no wrap, stops at the ends
-      if (key === 'L1') ui.modeSel = Math.max(0, ui.modeSel - 1);
-      else if (key === 'L2') ui.modeSel = Math.min(n - 1, ui.modeSel + 1);
-      else if (key === 'R1') {
-        state.mode = WF.MODES[ui.modeSel];
-        ui.screen = 'setup';
-        ui.setupSel = 0;
-        ui.editing = false;
-      }
-      // R2 is "Exit" on the watch; nothing to exit to here.
-    } else {
-      var f = fields();
-      var cur = f[ui.setupSel];
-      var wrap = f.length > 5;
-      if (key === 'L1' || key === 'L2') {
-        var d = key === 'L1' ? -1 : 1;
-        if (ui.editing) change(cur, -d); // L1 is +, L2 is -
-        else if (wrap) ui.setupSel = (ui.setupSel + d + f.length) % f.length;
-        else ui.setupSel = clamp(ui.setupSel + d, 0, f.length - 1);
-      } else if (key === 'R1') {
-        if (cur === 'COPY') copyWorkout();
-        else ui.editing = !ui.editing;
-      } else if (key === 'R2') {
-        if (ui.editing) ui.editing = false;
-        else { ui.screen = 'mode'; ui.modeSel = WF.MODES.indexOf(state.mode); }
-      }
-    }
-    update();
-  }
-
-  document.querySelectorAll('.hw').forEach(function (b) {
-    b.addEventListener('click', function () { press(b.getAttribute('data-key')); });
-  });
-
-  document.addEventListener('keydown', function (e) {
-    var t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
-    var map = {
-      ArrowUp: 'L1', ArrowDown: 'L2',
-      Enter: 'R1', ArrowRight: 'R1',
-      Escape: 'R2', ArrowLeft: 'R2', Backspace: 'R2',
-    };
-    var key = map[e.key];
-    if (!key) return;
-    // Enter on a focused page button clicks that button instead.
-    if (e.key === 'Enter' && t && t.tagName === 'BUTTON') return;
-    e.preventDefault();
-    press(key);
-  });
-
-  // ---- Watch screen drawing ----
-  var screen = document.getElementById('screen');
-  var glass = document.querySelector('.glass');
-
-  function fit() {
-    screen.style.transform = 'scale(' + glass.clientWidth / 240 + ')';
-  }
-  window.addEventListener('resize', fit);
 
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
   }
 
-  // Curved-rim word for R1 / R2, like the watch's TiltedLabel.
-  function rimLabel(key, text, colour) {
-    if (!text) return '';
-    var a = key === 'R1' ? -41 : 41; // degrees below horizontal
-    var r = 110;
-    var x = 120 + r * Math.cos(a * Math.PI / 180);
-    var y = 120 + r * Math.sin(a * Math.PI / 180);
-    var rot = key === 'R1' ? 50 : -50;
-    return '<div class="s-label ' + colour + '" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) +
-      'px;--rot:' + rot + 'deg">' + esc(text) + '</div>';
-  }
-
-  // Left-rim scroll indicator (Designer widget at 0,47 36x146).
-  function scrollIndicator(sel, count) {
-    if (count < 2) return '';
-    var r = 112, span = 38; // degrees each side of 9 o'clock
-    var a0 = 180 - span, a1 = 180 + span;
-    var frac = Math.max(1 / count, 0.25);
-    var len = (a1 - a0) * frac;
-    var start = a0 + (a1 - a0 - len) * (sel / (count - 1));
-    function pt(deg) {
-      var rad = deg * Math.PI / 180;
-      return (120 + r * Math.cos(rad)).toFixed(2) + ' ' + (120 - r * Math.sin(rad)).toFixed(2);
+  // ---- Workout <-> card ----
+  function blockOf(b) {
+    var w = { mode: b.mode, exercise: b.exercise, getReadyS: b.getReadyS, restAfterS: b.restAfterS || 0 };
+    switch (b.mode) {
+      case 'SETS': w.sets = b.setsCount; w.reps = b.setsReps; w.restS = b.restS; w.sides = b.sides; break;
+      case 'EMOM': w.minutes = b.emomMinutes; w.reps = b.emomReps; break;
+      case 'AMRAP': w.minutes = b.amrapMinutes; break;
+      case 'TABATA': w.rounds = b.tabataRounds; break;
     }
-    // Angles grow from the top of the track (upper left) down to the bottom.
-    function arc(from, to) {
-      return 'M ' + pt(from) + ' A ' + r + ' ' + r + ' 0 0 0 ' + pt(to);
-    }
-    return '<svg width="240" height="240" style="position:absolute;left:0;top:0">' +
-      '<path d="' + arc(a0, a1) + '" stroke="#555" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '<path d="' + arc(start, start + len) + '" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '</svg>';
+    return w;
   }
 
-  // The shared 5-row list: selected row in the middle, dimmer rows around it.
-  function rowList(items, sel, opt) {
-    var n = items.length;
-    var wrap = n > 5;
-    var html = '';
-    for (var k = -2; k <= 2; k++) {
-      var i = sel + k;
-      if (wrap) i = (i + n) % n;
-      else if (i < 0 || i >= n) continue;
-      var it = items[i];
-      var off = k === 0 ? 0 : (k < 0 ? -1 : 1) * (Math.abs(k) === 1 ? opt.step1 : opt.step2);
-      if (k > 0 && opt.detail) off += opt.detailH;
-      var y = opt.centreY + off;
-      var cls = 'r' + Math.abs(k);
-      var size = k === 0 ? (opt.big ? 34 : 20) : 15;
-      var inner = esc(it.label) + (it.value ? ' <span class="v' + (k === 0 && opt.editing ? ' edit' : '') + '">' + esc(it.value) + '</span>' : '');
-      html += '<div class="s-row ' + cls + '" style="top:' + y + 'px;font-size:' + size + 'px;line-height:' + (size + 6) + 'px"><span class="t">' + inner + '</span></div>';
-      if (k === 0 && opt.detail) {
-        html += '<div class="s-abs s-detail" style="top:' + (y + (opt.big ? 18 : 12)) + 'px">' + esc(opt.detail) + '</div>';
-      }
-    }
-    return html;
-  }
-
-  function setupHint() {
-    if (ui.flash) return ui.flash;
-    if (ui.editing) return { text: 'L1 / L2 to change' };
-    switch (state.mode) {
-      case 'SETS':
-        if (state.sides !== 2) return { text: 'Rest starts at target' };
-        return { text: ONE_ARM[state.exercise] ? 'Watch arm first' : 'Left, right, rest' };
-      case 'EMOM': return { text: 'Rest after the target' };
-      case 'AMRAP': return { text: 'Max reps, no rest' };
-      default: return { text: state.tabataRounds + ' x 20s on, 10s off' };
-    }
-  }
-
-  var sr = document.getElementById('sr');
-
-  function drawScreen() {
-    var html = '';
-    var spoken;
-    if (ui.screen === 'mode') {
-      html += '<div class="s-abs s-title">AutoRep</div>';
-      html += '<div class="s-abs s-sig">by <span class="r">R</span><span class="f">F</span></div>';
-      var items = WF.MODES.map(function (m) { return { label: m }; });
-      html += rowList(items, ui.modeSel, {
-        centreY: 106, step1: 34, step2: 58, big: true,
-        detail: MODE_INFO[WF.MODES[ui.modeSel]], detailH: 22,
-      });
-      html += scrollIndicator(ui.modeSel, items.length);
-      html += rimLabel('R1', 'Select', 'amber');
-      spoken = WF.MODES[ui.modeSel] + ': ' + MODE_INFO[WF.MODES[ui.modeSel]];
-    } else {
-      var f = fields();
-      var hint = setupHint();
-      html += '<div class="s-abs s-heading">' + esc(state.mode) + '</div>';
-      html += '<div class="s-abs s-hint' + (hint.cls ? ' ' + hint.cls : '') + '">' + esc(hint.text) + '</div>';
-      html += rowList(f.map(function (x) { return { label: x, value: fieldValue(x) }; }), ui.setupSel, {
-        centreY: 128, step1: 30, step2: 54, big: false, editing: ui.editing,
-      });
-      html += scrollIndicator(ui.setupSel, f.length);
-      var cur = f[ui.setupSel];
-      html += rimLabel('R1', ui.editing ? 'Done' : cur === 'COPY' ? 'Copy' : 'Edit', 'amber');
-      html += rimLabel('R2', 'Back', 'white');
-      var nm = state.name.trim().toUpperCase();
-      if (nm) html += '<div class="s-abs s-foot">' + esc(nm) + '</div>';
-      spoken = cur + (fieldValue(cur) ? ' ' + fieldValue(cur) : '') + (ui.editing ? ', editing' : '');
-    }
-    screen.innerHTML = html;
-    sr.textContent = spoken;
-  }
-
-  // ---- Page panels ----
-  var nameInput = document.getElementById('name');
-  var nameCount = document.getElementById('nameCount');
-  var nameMsg = document.getElementById('nameMsg');
-  var lineEl = document.getElementById('line');
-  var bytesEl = document.getElementById('bytes');
-  var copyBtn = document.getElementById('copy');
-  var timelineEl = document.getElementById('timeline');
-  var shareInput = document.getElementById('share');
-  var shareBtn = document.getElementById('copyShare');
-  var pasteInput = document.getElementById('paste');
-  var pasteMsg = document.getElementById('pasteMsg');
-
-  function currentText() {
-    return WF.checkName(state.name) ? null : WF.format(workout());
-  }
-
-  function shareUrl(text) {
-    return location.href.split('#')[0] + '#' + encodeURIComponent(text);
-  }
-
-  function fmtTime(s) {
-    var m = Math.floor(s / 60), r = s % 60;
-    return m + ':' + (r < 10 ? '0' : '') + r;
-  }
-
-  // Blocks in order: { kind: 'ready' | 'work' | 'rest', s }.
-  function timeline(w) {
-    var b = [{ kind: 'ready', s: w.getReadyS }];
-    var guess = false;
+  function fromBlock(w) {
+    var b = blankBlock();
+    b.mode = w.mode;
+    b.exercise = w.exercise;
+    b.getReadyS = w.getReadyS;
+    b.restAfterS = w.restAfterS || 0;
     switch (w.mode) {
-      case 'SETS':
-        guess = true;
-        for (var i = 1; i <= w.sets; i++) {
-          b.push({ kind: 'work', s: w.reps * SECONDS_PER_REP });
-          if (w.sides === 2) {
-            b.push({ kind: 'ready', s: w.getReadyS }); // switch countdown
-            b.push({ kind: 'work', s: w.reps * SECONDS_PER_REP });
-          }
-          if (i < w.sets) b.push({ kind: 'rest', s: w.restS });
-        }
-        break;
-      case 'EMOM':
-        guess = true;
-        for (var m = 0; m < w.minutes; m++) {
-          var work = Math.min(60, w.reps * SECONDS_PER_REP);
-          b.push({ kind: 'work', s: work });
-          if (work < 60) b.push({ kind: 'rest', s: 60 - work });
-        }
-        break;
-      case 'AMRAP':
-        b.push({ kind: 'work', s: w.minutes * 60 });
-        break;
-      case 'TABATA':
-        for (var r = 1; r <= w.rounds; r++) {
-          b.push({ kind: 'work', s: 20 });
-          if (r < w.rounds) b.push({ kind: 'rest', s: 10 });
-        }
-        break;
+      case 'SETS': b.setsCount = w.sets; b.setsReps = w.reps; b.restS = w.restS; b.sides = w.sides; break;
+      case 'EMOM': b.emomMinutes = w.minutes; b.emomReps = w.reps; break;
+      case 'AMRAP': b.amrapMinutes = w.minutes; break;
+      case 'TABATA': b.tabataRounds = w.rounds; break;
     }
-    return { blocks: b, guess: guess && w.mode === 'SETS' };
+    return b;
+  }
+
+  function workout(s) {
+    var blocks = s.blocks.map(blockOf);
+    blocks[blocks.length - 1].restAfterS = 0;
+    return { name: s.name.trim(), blocks: blocks };
+  }
+
+  function fromWorkout(w) {
+    return { name: w.name, blocks: (w.blocks || [w]).map(fromBlock), open: 0 };
+  }
+
+  // The whole line, or null while the name isn't valid.
+  function lineOf(s) {
+    return WF.checkName(s.name) ? null : WF.format(workout(s));
+  }
+
+  // The card's fields: the line cut into fields, or one empty field kept for
+  // it while it has no line.
+  function fieldsOf(s) {
+    var line = lineOf(s);
+    return line ? WF.split(line) : [null];
+  }
+
+  // Where each card's fields start (0-based), and how many fields in all.
+  function layout(list) {
+    var at = 0;
+    var cards = list.map(function (s) {
+      var f = fieldsOf(s);
+      var c = { start: at, fields: f };
+      at += f.length;
+      return c;
+    });
+    return { cards: cards, used: at };
   }
 
   function summary(w) {
-    // Same wording as the watch's detail line for a saved workout.
-    var ex = EXERCISE_NAME[w.exercise].toLowerCase();
+    var ex = EXERCISE_SHORT[w.exercise];
     switch (w.mode) {
       case 'SETS': return w.sets + 'x' + w.reps + ' ' + ex + (w.sides === 2 ? ' L+R' : '') + ', ' + w.restS + 's rest';
       case 'EMOM': return 'EMOM ' + w.minutes + ' min, ' + w.reps + ' ' + ex;
@@ -386,51 +124,252 @@
     }
   }
 
-  function drawTimeline() {
-    var w = workout();
-    var t = timeline(w);
-    var total = t.blocks.reduce(function (a, x) { return a + x.s; }, 0);
-    var bar = t.blocks.map(function (x) {
-      return '<i class="' + x.kind + '" style="flex:' + x.s + ' 0 0"></i>';
-    }).join('');
-    timelineEl.innerHTML =
-      '<div class="tl-bar" role="img" aria-label="Timeline, total ' + fmtTime(total) + '">' + bar + '</div>' +
-      '<div class="tl-info"><span>' + esc(summary(w)) + '</span><span>' + (t.guess ? 'about ' : '') + '<b>' + fmtTime(total) + '</b></span></div>' +
-      '<div class="tl-info tl-legend"><span></span><span><span class="work">work</span><span class="rest">rest</span><span class="ready">get ready</span></span></div>' +
-      (t.guess ? '<p class="tl-note">A set ends when you hit your target, so its length is a guess (' + SECONDS_PER_REP + ' s per rep).</p>' : '') +
-      (w.mode === 'EMOM' ? '<p class="tl-note">Work is a guess (' + SECONDS_PER_REP + ' s per rep); each minute is exactly one minute.</p>' : '');
-  }
-
-  function drawPanels() {
-    var nameErr = WF.checkName(state.name);
-    var trimmed = state.name.trim();
-    nameCount.textContent = trimmed.length + '/' + WF.MAX_NAME;
-    nameCount.classList.toggle('bad', trimmed.length > WF.MAX_NAME);
-    nameInput.classList.toggle('bad', !!nameErr);
-    nameMsg.textContent = nameErr || 'The watch shows it in capitals.';
-    nameMsg.classList.toggle('bad', !!nameErr);
-
-    var text = currentText();
-    var shown = text || WF.format(Object.assign(workout(), { name: trimmed || '?' }));
-    lineEl.textContent = shown;
-    lineEl.classList.toggle('bad', !text);
-    var bytes = WF.utf8Bytes(shown);
-    bytesEl.textContent = bytes + '/' + WF.MAX_BYTES;
-    bytesEl.classList.toggle('bad', bytes > WF.MAX_BYTES);
-    copyBtn.disabled = !text;
-    if (!copyBtn.dataset.flash) copyBtn.textContent = text ? 'Copy' : 'Fix the name to copy';
-
-    shareInput.value = text ? shareUrl(text) : '';
-    shareBtn.disabled = !text;
-    if (text) {
-      try { history.replaceState(null, '', '#' + encodeURIComponent(text)); } catch (e) { /* file:// in some browsers */ }
+  // One block's time in seconds with its get-ready, and whether it is a
+  // guess (sets end on the target).
+  function duration(w) {
+    var t = w.getReadyS;
+    switch (w.mode) {
+      case 'SETS': {
+        var set = w.reps * SECONDS_PER_REP;
+        var perSet = w.sides === 2 ? 2 * set + w.getReadyS : set;
+        return { s: t + w.sets * perSet + (w.sets - 1) * w.restS, guess: true };
+      }
+      case 'EMOM': return { s: t + w.minutes * 60, guess: false };
+      case 'AMRAP': return { s: t + w.minutes * 60, guess: false };
+      default: return { s: t + w.rounds * 30 - 10, guess: false };
     }
-    drawTimeline();
   }
 
-  function update() {
-    drawScreen();
-    drawPanels();
+  // The whole workout. After a REST the next block starts at the end of the
+  // rest (the rest is its get-ready); without one it has its own get-ready.
+  function totalDuration(blocks) {
+    var s = 0, guess = false;
+    blocks.forEach(function (b, j) {
+      var d = duration(b);
+      guess = guess || d.guess;
+      var prevRest = j > 0 ? blocks[j - 1].restAfterS : 0;
+      s += prevRest ? prevRest + d.s - b.getReadyS : d.s;
+    });
+    return { s: s, guess: guess };
+  }
+
+  function fmtTime(s) {
+    var m = Math.floor(s / 60), r = s % 60;
+    return m + ':' + (r < 10 ? '0' : '') + r;
+  }
+
+  // ---- Controls ----
+  function attrs(i, j, field) {
+    return ' data-slot="' + i + '"' + (j !== null ? ' data-block="' + j + '"' : '') + ' data-field="' + field + '"';
+  }
+
+  function chips(i, j, field, options, current, label) {
+    return '<div class="chips" role="radiogroup" aria-label="' + esc(label) + '">' + options.map(function (o) {
+      var on = o.value === current;
+      return '<button type="button" class="chip' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '"' +
+        attrs(i, j, field) + ' data-value="' + esc(o.value) + '">' + esc(o.label) + '</button>';
+    }).join('') + '</div>';
+  }
+
+  function stepper(i, j, field, label, value, lo, hi) {
+    return '<div class="opt"><span class="opt-l">' + esc(label) + '</span>' +
+      '<span class="step">' +
+      '<button type="button" class="sb" aria-label="Less ' + esc(label) + '"' + attrs(i, j, field) + ' data-delta="-1"' + (value <= lo ? ' disabled' : '') + '>−</button>' +
+      '<output class="sv">' + value + '</output>' +
+      '<button type="button" class="sb" aria-label="More ' + esc(label) + '"' + attrs(i, j, field) + ' data-delta="1"' + (value >= hi ? ' disabled' : '') + '>+</button>' +
+      '</span></div>';
+  }
+
+  function optionRow(label, control) {
+    return '<div class="opt opt-col"><span class="opt-l">' + esc(label) + '</span>' + control + '</div>';
+  }
+
+  function seconds(list) { return list.map(function (v) { return { value: v, label: v + ' s' }; }); }
+
+  function options(i, j, b) {
+    var L = WF.LIMITS;
+    var html = '';
+    switch (b.mode) {
+      case 'SETS':
+        html += stepper(i, j, 'setsReps', 'Reps per set', b.setsReps, L.reps[0], L.reps[1]);
+        html += stepper(i, j, 'setsCount', 'Sets', b.setsCount, 1, b.sides === 2 ? L.setsCountTwoSides[1] : L.setsCount[1]);
+        html += optionRow('Rest between sets', chips(i, j, 'restS', seconds(WF.REST_OPTIONS), b.restS, 'Rest'));
+        html += optionRow('Sides', chips(i, j, 'sides', [{ value: 1, label: 'One' }, { value: 2, label: 'Left, then right' }], b.sides, 'Sides'));
+        break;
+      case 'EMOM':
+        html += stepper(i, j, 'emomReps', 'Reps per minute', b.emomReps, L.reps[0], L.reps[1]);
+        html += stepper(i, j, 'emomMinutes', 'Minutes', b.emomMinutes, L.emomMinutes[0], L.emomMinutes[1]);
+        break;
+      case 'AMRAP':
+        html += stepper(i, j, 'amrapMinutes', 'Minutes', b.amrapMinutes, L.amrapMinutes[0], L.amrapMinutes[1]);
+        break;
+      default:
+        html += stepper(i, j, 'tabataRounds', 'Rounds', b.tabataRounds, L.tabataRounds[0], L.tabataRounds[1]);
+        break;
+    }
+    html += optionRow('Get ready', chips(i, j, 'getReadyS', seconds(WF.GET_READY_OPTIONS), b.getReadyS, 'Get ready'));
+    return html;
+  }
+
+  // The format/exercise/options of one block.
+  function blockEditor(i, j, b) {
+    var modes = WF.MODES.map(function (m) { return { value: m, label: MODE_LABEL[m] }; });
+    var exercises = WF.EXERCISES.map(function (e) { return { value: e, label: EXERCISE_LABEL[e] }; });
+    return '<span class="field-l">Format</span>' + chips(i, j, 'mode', modes, b.mode, 'Format') +
+      '<p class="mode-info">' + esc(MODE_INFO[b.mode]) + '</p>' +
+      '<span class="field-l">Exercise</span>' + chips(i, j, 'exercise', exercises, b.exercise, 'Exercise') +
+      '<div class="opts">' + options(i, j, b) + '</div>';
+  }
+
+  function blocksHtml(i, s) {
+    if (s.blocks.length === 1) return blockEditor(i, 0, s.blocks[0]);
+    var rests = [{ value: 0, label: 'None' }].concat(seconds(WF.REST_OPTIONS));
+    // One line between two exercises: a dropdown, not seven chips.
+    function restPicker(j, current) {
+      return '<label class="between"><span class="opt-l">Rest before next</span>' +
+        '<select class="rest-sel" data-slot="' + i + '" data-block="' + j + '" data-field="restAfterS">' +
+        rests.map(function (o) {
+          return '<option value="' + o.value + '"' + (o.value === current ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+        }).join('') + '</select></label>';
+    }
+    return s.blocks.map(function (b, j) {
+      var open = j === s.open;
+      var head = '<div class="block-head">' +
+        '<button type="button" class="block-title" data-slot="' + i + '" data-open="' + j + '" aria-expanded="' + open + '">' +
+        '<span class="num">' + (j + 1) + '</span>' +
+        '<span class="bsum">' + esc(summary(blockOf(b))) + '</span>' +
+        (open ? '' : '<span class="edit">Edit</span>') + '</button>' +
+        '<button type="button" class="x" data-slot="' + i + '" data-remove-block="' + j + '" aria-label="Remove exercise ' + (j + 1) + '" title="Remove">✕</button>' +
+        '</div>';
+      var html = '<div class="block' + (open ? ' open' : '') + '">' + head + (open ? blockEditor(i, j, b) : '') + '</div>';
+      if (j < s.blocks.length - 1) {
+        html += restPicker(j, b.restAfterS || 0);
+      }
+      return html;
+    }).join('');
+  }
+
+  // ---- Cards ----
+  var slotsEl = document.getElementById('slots');
+  var addBtn = document.getElementById('add');
+
+  function fieldRange(c) {
+    var a = c.start + 1, z = c.start + c.fields.length;
+    return a === z ? 'Workout ' + a : 'Workout ' + a + '–' + z;
+  }
+
+  function cardHtml(i, lay) {
+    var s = slots[i];
+    var c = lay.cards[i];
+    var starters = window.STARTERS.map(function (st, k) {
+      return '<button type="button" class="chip ghost" data-slot="' + i + '" data-starter="' + k + '">' + esc(st.title) + '</button>';
+    }).join('');
+    var n = c.fields.length;
+    var where = n === 1
+      ? 'Paste it into <b>Workout ' + (c.start + 1) + '</b> in AutoRep\'s settings.'
+      : 'Too long for one field: paste the ' + n + ' lines into <b>Workout ' + (c.start + 1) + '</b> to <b>Workout ' + (c.start + n) + '</b>, in order.';
+    var canAddBlock = s.blocks.length < WF.MAX_BLOCKS && fitsWith(i, function (t) { t.blocks.push(blankBlock()); });
+    return '' +
+      '<div class="card-head"><h2>' + fieldRange(c) + '</h2>' +
+      (slots.length > 1 ? '<button type="button" class="link" data-slot="' + i + '" data-remove="1">Remove</button>' : '') + '</div>' +
+      '<p class="desc">' + where + '</p>' +
+      '<hr>' +
+      '<label class="field-l" for="name' + i + '">Name</label>' +
+      '<input class="pill name" id="name' + i + '" data-slot="' + i + '" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="40" value="' + esc(s.name) + '" placeholder="e.g. Leg day">' +
+      '<p class="hint" data-hint="' + i + '"></p>' +
+      '<div class="starters"><span class="field-l">Start from</span>' + starters + '</div>' +
+      (s.blocks.length > 1 ? '<span class="field-l">Exercises, in order</span>' : '') +
+      '<div class="blocks">' + blocksHtml(i, s) + '</div>' +
+      '<button type="button" class="add-ex" data-slot="' + i + '" data-add-block="1"' + (canAddBlock ? '' : ' disabled') + '>+ Add exercise</button>' +
+      (canAddBlock ? '' : '<p class="hint left">' + (s.blocks.length >= WF.MAX_BLOCKS ? 'At most ' + WF.MAX_BLOCKS + ' exercises.' : 'No room: AutoRep has ' + FIELDS + ' workout fields.') + '</p>') +
+      '<div class="result">' +
+      '<p class="sum" data-sum="' + i + '"></p>' +
+      (s.blocks.length > 1 ? '<p class="note">' + esc(NEEDS_12) + '</p>' : '') +
+      '<div data-lines="' + i + '"></div>' +
+      '</div>' +
+      '<details class="paste"><summary>Edit a workout you already have</summary>' +
+      '<textarea class="pill mono" data-paste="' + i + '" rows="2" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Leg day|SETS SQUAT 3x12 R90"></textarea>' +
+      '<p class="hint" data-paste-msg="' + i + '"></p></details>';
+  }
+
+  // Would the cards still fit the five fields after change(copy of card i)?
+  function fitsWith(i, change) {
+    var copy = slots.map(function (s, k) {
+      if (k !== i) return s;
+      var t = JSON.parse(JSON.stringify(s));
+      change(t);
+      return t;
+    });
+    return layout(copy).used <= FIELDS;
+  }
+
+  function render(focus) {
+    var lay = layout(slots);
+    slotsEl.innerHTML = slots.map(function (_, i) { return '<section class="card" id="slot' + i + '">' + cardHtml(i, lay) + '</section>'; }).join('');
+    slots.forEach(function (_, i) { refresh(i, lay); });
+    addBtn.hidden = lay.used >= FIELDS;
+    if (focus) {
+      var f = document.querySelector(focus);
+      if (f) f.focus({ preventScroll: true });
+    }
+    save();
+  }
+
+  // The parts that follow the name as you type.
+  function refresh(i, lay) {
+    var s = slots[i];
+    var c = lay.cards[i];
+    var el = document.getElementById('slot' + i);
+    var err = WF.checkName(s.name);
+    var trimmed = s.name.trim();
+    var name = el.querySelector('.name');
+    var hint = el.querySelector('[data-hint="' + i + '"]');
+    name.classList.toggle('bad', !!err);
+    hint.textContent = err ? err : trimmed.length + '/' + WF.MAX_NAME + ' · shown in capitals on the watch';
+    hint.classList.toggle('bad', !!err);
+
+    var w = workout(s);
+    var d = totalDuration(w.blocks);
+    var what = w.blocks.length === 1 ? summary(w.blocks[0]) : w.blocks.length + ' exercises';
+    el.querySelector('[data-sum="' + i + '"]').innerHTML =
+      esc(what) + ' <span class="time">' + (d.guess ? 'about ' : '') + fmtTime(d.s) + '</span>';
+
+    var multi = c.fields.length > 1;
+    el.querySelector('[data-lines="' + i + '"]').innerHTML = c.fields.map(function (text, k) {
+      var n = c.start + k + 1;
+      var fits = n <= FIELDS;
+      return '<div class="field">' +
+        (multi ? '<span class="field-n">Workout ' + n + '</span>' : '') +
+        '<output class="line' + (text ? '' : ' empty') + '">' + esc(text || 'Give it a name first') + '</output>' +
+        (fits ? '' : '<p class="hint bad left">Doesn\'t fit: AutoRep has ' + FIELDS + ' workout fields. Remove an exercise or a workout.</p>') +
+        '<button type="button" class="copy" data-slot="' + i + '" data-copy="' + k + '"' + (text && fits ? '' : ' disabled') + '>Copy for Workout ' + n + '</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  function change(i, j, field, value) {
+    var s = slots[i];
+    var b = s.blocks[j];
+    var L = WF.LIMITS;
+    switch (field) {
+      case 'mode': case 'exercise': b[field] = value; break;
+      case 'restS': case 'getReadyS': case 'restAfterS': b[field] = Number(value); break;
+      case 'sides':
+        b.sides = Number(value);
+        if (b.sides === 2) b.setsCount = Math.min(b.setsCount, L.setsCountTwoSides[1]);
+        break;
+    }
+  }
+
+  function step(i, j, field, delta) {
+    var b = slots[i].blocks[j];
+    var L = WF.LIMITS;
+    var range = {
+      setsReps: L.reps, emomReps: L.reps,
+      setsCount: b.sides === 2 ? L.setsCountTwoSides : L.setsCount,
+      emomMinutes: L.emomMinutes, amrapMinutes: L.amrapMinutes, tabataRounds: L.tabataRounds,
+    }[field];
+    b[field] = clamp(b[field] + delta, range[0], range[1]);
   }
 
   // ---- Copy ----
@@ -455,108 +394,209 @@
     return ok;
   }
 
-  function flashButton(btn, text) {
-    btn.dataset.flash = '1';
-    btn.textContent = text;
-    clearTimeout(btn._t);
-    btn._t = setTimeout(function () { delete btn.dataset.flash; drawPanels(); btn.textContent = btn === copyBtn ? (currentText() ? 'Copy' : 'Fix the name to copy') : 'Copy link'; }, 1500);
+  function copyField(i, k, btn) {
+    var c = layout(slots).cards[i];
+    var text = c.fields[k];
+    if (!text) return;
+    var n = c.start + k + 1;
+    copyText(text).then(function (ok) {
+      btn.textContent = ok ? 'Copied. Paste it into Workout ' + n : 'Select the line above and copy it';
+      btn.classList.toggle('done', ok);
+      clearTimeout(btn._t);
+      btn._t = setTimeout(function () {
+        btn.textContent = 'Copy for Workout ' + n;
+        btn.classList.remove('done');
+      }, 2500);
+    });
   }
 
-  function flashScreen(text, cls) {
-    ui.flash = { text: text, cls: cls };
-    clearTimeout(ui.flashTimer);
-    ui.flashTimer = setTimeout(function () { ui.flash = null; drawScreen(); }, 1500);
-  }
-
-  function copyWorkout() {
-    var text = currentText();
-    if (!text) {
-      flashScreen('Fix the name first', 'warn');
-      nameInput.focus();
+  // ---- Events ----
+  slotsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    var i = Number(b.getAttribute('data-slot'));
+    var s = slots[i];
+    if (b.hasAttribute('data-copy')) { copyField(i, Number(b.getAttribute('data-copy')), b); return; }
+    if (b.hasAttribute('data-remove')) { slots.splice(i, 1); render(); return; }
+    if (b.hasAttribute('data-starter')) {
+      var w = WF.parse(window.STARTERS[Number(b.getAttribute('data-starter'))].text);
+      if (w.ok) {
+        var name = s.name;
+        slots[i] = fromWorkout(w);
+        if (!fitsWith(i, function () {})) { slots[i] = s; s.name = name; }
+        render();
+      }
       return;
     }
-    copyText(text).then(function (ok) {
-      flashButton(copyBtn, ok ? 'Copied ✓' : 'Select the line and copy it');
-      flashScreen(ok ? 'Copied to clipboard' : 'Copy failed', ok ? 'good' : 'warn');
-      drawScreen();
-    });
+    if (b.hasAttribute('data-open')) {
+      var j0 = Number(b.getAttribute('data-open'));
+      s.open = s.open === j0 ? -1 : j0;
+      render('#slot' + i + ' [data-open="' + j0 + '"]');
+      return;
+    }
+    if (b.hasAttribute('data-add-block')) {
+      if (b.disabled) return;
+      s.blocks.push(blankBlock());
+      s.open = s.blocks.length - 1;
+      render('#slot' + i + ' [data-open="' + s.open + '"]');
+      var nb = document.querySelector('#slot' + i + ' .block.open');
+      if (nb) nb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (b.hasAttribute('data-remove-block')) {
+      var r = Number(b.getAttribute('data-remove-block'));
+      s.blocks.splice(r, 1);
+      if (s.blocks.length) s.blocks[s.blocks.length - 1].restAfterS = 0;
+      s.open = Math.min(Math.max(s.open, 0), s.blocks.length - 1);
+      render();
+      return;
+    }
+    var field = b.getAttribute('data-field');
+    if (!field) return;
+    var j = Number(b.getAttribute('data-block') || 0);
+    var sel = '#slot' + i + ' [data-block="' + j + '"][data-field="' + field + '"]';
+    if (b.hasAttribute('data-delta')) {
+      step(i, j, field, Number(b.getAttribute('data-delta')));
+      render(sel + '[data-delta="' + b.getAttribute('data-delta') + '"]');
+    } else {
+      change(i, j, field, b.getAttribute('data-value'));
+      render(sel + '.on');
+    }
+  });
+
+  slotsEl.addEventListener('change', function (e) {
+    var t = e.target;
+    if (!t.classList.contains('rest-sel')) return;
+    var i = Number(t.getAttribute('data-slot'));
+    var j = Number(t.getAttribute('data-block'));
+    var before = slots[i].blocks[j].restAfterS;
+    slots[i].blocks[j].restAfterS = Number(t.value);
+    if (layout(slots).used > FIELDS && before === 0) {
+      // "REST 60" can push the line into one more field than is left.
+      slots[i].blocks[j].restAfterS = before;
+    }
+    render('#slot' + i + ' select[data-block="' + j + '"]');
+  });
+
+  slotsEl.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.classList.contains('name')) {
+      var i = Number(t.getAttribute('data-slot'));
+      var before = layout(slots);
+      slots[i].name = t.value;
+      var after = layout(slots);
+      var moved = before.cards.some(function (c, k) {
+        return c.start !== after.cards[k].start || c.fields.length !== after.cards[k].fields.length;
+      });
+      if (moved) {
+        // The field numbers changed: redraw the cards, keeping the caret.
+        var pos = t.selectionStart;
+        render('#name' + i);
+        var n = document.getElementById('name' + i);
+        try { n.setSelectionRange(pos, pos); } catch (err) { /* not a text box */ }
+      } else {
+        refresh(i, after);
+        addBtn.hidden = after.used >= FIELDS;
+        save();
+      }
+      return;
+    }
+    if (t.hasAttribute('data-paste')) {
+      var k = Number(t.getAttribute('data-paste'));
+      var msg = document.querySelector('[data-paste-msg="' + k + '"]');
+      if (t.value.trim() === '') { msg.textContent = ''; msg.className = 'hint'; return; }
+      // One line, or the lines of a workout that continues ("+|").
+      var lines = t.value.split(/\r?\n/).filter(function (l) { return l.trim() !== ''; });
+      var r = lines.length > 1 ? WF.parseFields(lines.slice(0, FIELDS))[0] : WF.parse(lines[0]);
+      if (!r || r.empty) return;
+      if (!r.ok) {
+        msg.textContent = 'Can\'t read: ' + r.reason + '.';
+        msg.className = 'hint bad';
+        return;
+      }
+      var old = slots[k];
+      slots[k] = fromWorkout(r);
+      if (!fitsWith(k, function () {})) {
+        slots[k] = old;
+        msg.textContent = 'It doesn\'t fit in the fields left. Remove another workout first.';
+        msg.className = 'hint bad';
+        return;
+      }
+      render();
+      var m2 = document.querySelector('[data-paste-msg="' + k + '"]');
+      m2.textContent = 'Loaded "' + r.name + '".';
+      m2.className = 'hint good';
+      document.querySelector('#slot' + k + ' details').open = true;
+    }
+  });
+
+  addBtn.addEventListener('click', function () {
+    if (layout(slots).used >= FIELDS) return;
+    slots.push(blank(''));
+    render();
+    var name = document.getElementById('name' + (slots.length - 1));
+    if (name) { name.scrollIntoView({ behavior: 'smooth', block: 'center' }); name.focus({ preventScroll: true }); }
+  });
+
+  // ---- Keep it: hash (share link) and localStorage ----
+  function save() {
+    var lines = slots.map(lineOf).filter(Boolean);
+    try { history.replaceState(null, '', lines.length ? '#' + encodeURIComponent(lines.join('\n')) : location.pathname); } catch (e) { /* file:// */ }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(slots)); } catch (e) { /* private mode */ }
   }
 
-  copyBtn.addEventListener('click', copyWorkout);
-  shareBtn.addEventListener('click', function () {
-    copyText(shareInput.value).then(function (ok) { flashButton(shareBtn, ok ? 'Copied ✓' : 'Copy failed'); });
-  });
-
-  nameInput.addEventListener('input', function () {
-    state.name = nameInput.value;
-    update();
-  });
-
-  // ---- Paste box ----
-  var HELP = {
-    NAME: 'Start with a name of 1 to 12 letters, digits, spaces or - / :, then a |.',
-    MODE: 'After the |, start with SETS, EMOM, AMRAP or TABATA.',
-    EXERCISE: 'After the mode, give SQUAT, CURL, PRESS, SWING or JACK.',
-    TOKEN: 'This mode doesn\'t take that.',
-    RANGE: 'That value is out of range.',
-    TWICE: 'That setting is given twice.',
-    CHAIN: 'Only one block per workout for now.',
-    LONG: 'The UNA app takes at most 128 bytes.',
-  };
-
-  function readPaste(text, fromHash) {
-    var r = WF.parse(text);
-    pasteMsg.classList.remove('bad', 'good');
-    if (r.empty) {
-      pasteMsg.textContent = fromHash ? '' : 'An empty field is an unused slot.';
-      return false;
-    }
-    if (!r.ok) {
-      pasteMsg.textContent = 'Can\'t read: ' + r.reason + '. ' + HELP[r.error];
-      pasteMsg.classList.add('bad');
-      return false;
-    }
-    load(r);
-    pasteMsg.textContent = 'Loaded "' + r.name + '".';
-    pasteMsg.classList.add('good');
-    update();
-    return true;
+  // Keeps cards while they fit the five fields.
+  function fitting(list) {
+    var out = [];
+    list.forEach(function (s) { if (layout(out.concat([s])).used <= FIELDS) out.push(s); });
+    return out.length ? out : null;
   }
 
-  pasteInput.addEventListener('input', function () {
-    if (pasteInput.value === '') { pasteMsg.textContent = ''; pasteMsg.className = 'msg'; return; }
-    readPaste(pasteInput.value, false);
-  });
-
-  // ---- Starters ----
-  var startersEl = document.getElementById('starters');
-  window.STARTERS.forEach(function (s) {
-    var b = document.createElement('button');
-    b.className = 'starter';
-    b.innerHTML = '<b>' + esc(s.title) + '</b><span>' + esc(s.note) + '</span>';
-    b.addEventListener('click', function () {
-      var w = WF.parse(s.text);
-      if (w.ok) { load(w); update(); document.getElementById('device').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    });
-    startersEl.appendChild(b);
-  });
-
-  // ---- Share link in ----
   function fromHash() {
     var h = location.hash.replace(/^#/, '');
-    if (!h) return false;
+    if (!h) return null;
     var text;
-    try { text = decodeURIComponent(h.replace(/\+/g, ' ')); } catch (e) { return false; }
-    if (text === currentText()) return true;
-    var ok = readPaste(text, true);
-    if (!ok) pasteInput.value = text;
-    return ok;
+    try { text = decodeURIComponent(h.replace(/\+/g, ' ')); } catch (e) { return null; }
+    var out = [];
+    text.split('\n').forEach(function (line) {
+      var r = WF.parseText(line);   // a whole workout, not cut into fields
+      if (r.ok) out.push(fromWorkout(r));
+    });
+    return fitting(out);
   }
-  window.addEventListener('hashchange', fromHash);
 
-  // ---- Start ----
-  nameInput.value = state.name;
-  fit();
-  if (!fromHash()) update();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  // A saved card, in this page's shape. Cards saved before AutoRep 1.2 had
+  // one exercise and its values next to the name.
+  function fromSaved(x) {
+    if (!x || typeof x !== 'object') return null;
+    if (Array.isArray(x.blocks) && x.blocks.length) {
+      return {
+        name: String(x.name || ''),
+        blocks: x.blocks.slice(0, WF.MAX_BLOCKS).map(function (b) { return Object.assign(blankBlock(), b); }),
+        open: typeof x.open === 'number' ? x.open : 0,
+      };
+    }
+    var b = Object.assign(blankBlock(), x);
+    delete b.name;
+    return { name: String(x.name || ''), blocks: [b], open: 0 };
+  }
+
+  function fromStore() {
+    var keys = [STORE_KEY, OLD_STORE_KEY];
+    for (var k = 0; k < keys.length; k++) {
+      try {
+        var v = JSON.parse(localStorage.getItem(keys[k]));
+        if (Array.isArray(v) && v.length) {
+          var list = v.map(fromSaved).filter(Boolean);
+          list.forEach(function (s) { s.blocks[s.blocks.length - 1].restAfterS = 0; });
+          var out = fitting(list);
+          if (out) return out;
+        }
+      } catch (e) { /* none, or unreadable */ }
+    }
+    return null;
+  }
+
+  slots = fromHash() || fromStore() || [fromWorkout(WF.parse(window.STARTERS[0].text))];
+  render();
 })();
