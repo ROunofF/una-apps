@@ -84,6 +84,24 @@ shows reps per round, your heart rate and your pace, so you can see where you sl
 pause; during a set in Sets, end the set), R2 = back (during a workout: hold to end). The app opens with a short "by RF" mark; any
 button skips it.
 
+## Workout builder
+
+Set up workouts on your phone with the
+**[AutoRep workout builder](https://rounoff.github.io/una-apps/AutoRep/builder/)**, a web page
+made for the phone. Nothing to install, and nothing leaves your phone.
+
+1. Name the workout and add exercises: format, exercise, reps, sets, rest. Up to 10, with a rest
+   between them if you like.
+2. Tap **Copy for Workout 1**.
+3. In the UNA app, open AutoRep's settings and paste it into **Workout 1**.
+4. On the watch, it's at the top of AutoRep's list: pick it and press START.
+
+Up to five workouts. A long one fills the next field too; the builder says which.
+
+<p align="center">
+<img src="images/builder.png" alt="The workout builder: Full body, 3x12 squats, then a 60 s rest, then a Tabata of jumping jacks" width="300">
+</p>
+
 ## How the counting works
 
 The watch reads its accelerometer and gyroscope 50 times a second. For each exercise it uses the

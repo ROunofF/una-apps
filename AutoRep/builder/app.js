@@ -15,7 +15,7 @@
   var STORE_KEY = 'autorep-builder-v3';
   var OLD_STORE_KEY = 'autorep-builder-v2';   // one exercise per card
   // Shown on a workout with more than one exercise until 1.2 is on the store.
-  var NEEDS_12 = 'Needs AutoRep 1.2 on the watch.';
+  var NEEDS_12 = '';   // 1.2 is on the store
 
   var MODE_LABEL = { SETS: 'Sets', EMOM: 'EMOM', AMRAP: 'AMRAP', TABATA: 'Tabata' };
   var MODE_INFO = {
@@ -293,7 +293,7 @@
       (canAddBlock ? '' : '<p class="hint left">' + (s.blocks.length >= WF.MAX_BLOCKS ? 'At most ' + WF.MAX_BLOCKS + ' exercises.' : 'No room: AutoRep has ' + FIELDS + ' workout fields.') + '</p>') +
       '<div class="result">' +
       '<p class="sum" data-sum="' + i + '"></p>' +
-      (s.blocks.length > 1 ? '<p class="note">' + esc(NEEDS_12) + '</p>' : '') +
+      (s.blocks.length > 1 && NEEDS_12 ? '<p class="note">' + esc(NEEDS_12) + '</p>' : '') +
       '<div data-lines="' + i + '"></div>' +
       '</div>' +
       '<details class="paste"><summary>Edit a workout you already have</summary>' +
