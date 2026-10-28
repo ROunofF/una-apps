@@ -28,6 +28,8 @@
   // Same words as the watch's detail line (Model::exerciseShort).
   var EXERCISE_SHORT = { SQUAT: 'squats', CURL: 'curls', PRESS: 'press', SWING: 'swings', JACK: 'jacks' };
   var SECONDS_PER_REP = 3; // for the time estimate only
+  // The watch can't count the arm without it on these (AutoRep's isOneArm()).
+  var ONE_ARM = { CURL: true, PRESS: true, SWING: true };
 
   function blankBlock() {
     return {
@@ -194,7 +196,14 @@
         html += stepper(i, j, 'setsReps', 'Reps per set', b.setsReps, L.reps[0], L.reps[1]);
         html += stepper(i, j, 'setsCount', 'Sets', b.setsCount, 1, b.sides === 2 ? L.setsCountTwoSides[1] : L.setsCount[1]);
         html += optionRow('Rest between sets', chips(i, j, 'restS', seconds(WF.REST_OPTIONS), b.restS, 'Rest'));
-        html += optionRow('Sides', chips(i, j, 'sides', [{ value: 1, label: 'One' }, { value: 2, label: 'Left, then right' }], b.sides, 'Sides'));
+        if (ONE_ARM[b.exercise]) {
+          // The watch counts only its own arm: the other arm is timed to match
+          // and gets the same reps (AutoRep's Sets "one-arm exercises").
+          html += optionRow('Sides', chips(i, j, 'sides', [{ value: 1, label: 'One' }, { value: 2, label: 'Watch arm, then other arm' }], b.sides, 'Sides') +
+            (b.sides === 2 ? '<p class="hint left">The other arm is timed, not counted: it gets the watch arm\'s reps.</p>' : ''));
+        } else {
+          html += optionRow('Sides', chips(i, j, 'sides', [{ value: 1, label: 'One' }, { value: 2, label: 'Left, then right' }], b.sides, 'Sides'));
+        }
         break;
       case 'EMOM':
         html += stepper(i, j, 'emomReps', 'Reps per minute', b.emomReps, L.reps[0], L.reps[1]);
@@ -597,6 +606,6 @@
     return null;
   }
 
-  slots = fromHash() || fromStore() || [fromWorkout(WF.parse(window.STARTERS[0].text))];
+  slots = fromHash() || fromStore() || [blank('My workout')];   // first visit: 3 sets of 12 squats
   render();
 })();
