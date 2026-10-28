@@ -1,8 +1,8 @@
-# una-apps-submissions: guide for adding an app
+# una-apps: guide for adding an app
 
 Public showcase of RF's entries in UNA's first app competition
 (https://dev.unawatch.com/t/announcing-unas-first-app-competition-october-2026/113).
-GitHub: https://github.com/ROunofF/una-apps-submissions (branch `main`).
+GitHub: https://github.com/ROunofF/una-apps (branch `main`; renamed from una-apps-submissions on 2026-10-27, the old address redirects). The local folder is still `~/STM32Cube/una-apps-submissions`.
 
 **Deadline:** 2026-10-30, 4 pm UK = 12:00 noon Toronto. Each entry needs the app on the UNA
 community store (an unpublished draft counts) plus the Google Form
@@ -70,11 +70,11 @@ This repo is where users reach RF about any of the apps: GitHub issues with thre
 - **New app:** add it to the "Which app?" dropdown in all three forms.
 - **Every app page** ends with a "Feedback" section linking to `issues/new/choose`.
 - **Every store description** (`app-manifest.json` in the app's project) ends with this
-  paragraph, just before the "<App> by RF." signature line:
+  paragraph, as its last lines (no "<App> by RF." line after it: the store already shows the app name, so it read twice):
 
   ```
   FEEDBACK
-  Found a bug or have an idea? Tell me at https://github.com/ROunofF/una-apps-submissions (pick <App> in the form). My other apps are there too.
+  Found a bug or have an idea? Tell me at https://github.com/ROunofF/una-apps/issues/new/choose (pick <App> in the form). My other apps are there too.
   ```
 
   It reaches the store with the app's next upload.

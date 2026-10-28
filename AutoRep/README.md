@@ -101,6 +101,9 @@ the buzzes and the phone-app activity work. The other exercises are tuned on the
 
 ## Coming next
 
+- **Saved workouts (1.1):** build up to five workouts on your phone with the
+  [**workout builder**](https://rounoff.github.io/una-apps/AutoRep/builder/), copy each one into
+  AutoRep's settings in the UNA app, and start them from the top of the watch's mode list.
 - **Workout plans, set from the watch:** chain several blocks into one workout (for example EMOM
   5 min of squats, rest 60 s, Tabata jumping jacks, rest 60 s, AMRAP 5 min of curls), each with its
   own format, exercise, target and rest. Built on the watch with the same lists, run as one
@@ -108,7 +111,7 @@ the buzzes and the phone-app activity work. The other exercises are tuned on the
 
 ## Feedback
 
-Found a bug, or have an idea? [Open an issue](https://github.com/ROunofF/una-apps-submissions/issues/new/choose)
+Found a bug, or have an idea? [Open an issue](https://github.com/ROunofF/una-apps/issues/new/choose)
 and pick **AutoRep** in the form.
 
 ---
