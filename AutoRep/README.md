@@ -54,6 +54,11 @@ shows reps per round, your heart rate and your pace, so you can see where you sl
   that long before each rest ends, then 3-2-1.
 - **Miscounted?** L1 and L2 add or remove a rep with one press, even during rest.
 - **Remembers your last workout:** open AutoRep and press R1 twice to start it again.
+- **Saved workouts, built on your phone (1.2):** set them up on the
+  [**workout builder**](https://rounoff.github.io/una-apps/AutoRep/builder/), copy each one into
+  AutoRep's settings in the UNA app, and start them from the top of the watch's list. A workout can
+  chain up to 10 exercises with rests between them (for example squats, rest 60 s, presses, then a
+  Tabata of jumping jacks): they run one after the other, as one activity, with a summary per block.
 - **Saved to the UNA phone app:** each workout is an activity with one lap per round (per side with
   Sides 2), heart rate,
   calories, total reps, reps per lap, and graphs of reps and reps per minute over time.
@@ -61,10 +66,10 @@ shows reps per round, your heart rate and your pace, so you can see where you sl
 
 ## Screens
 
-| Choose a format | Set it up | Finding your rhythm |
+| Your workouts first | A saved workout | Finding your rhythm |
 |:---:|:---:|:---:|
 | <img src="images/1_mode.png" width="220"> | <img src="images/2_setup.png" width="220"> | <img src="images/4_finding_rhythm.png" width="220"> |
-| Sets, EMOM, AMRAP or Tabata | Target, sets, sides, rest | First three reps set the baseline |
+| Built on your phone, then the formats | Its blocks, run one after the other | First three reps set the baseline |
 
 | A set | Target hit | Summary |
 |:---:|:---:|:---:|
@@ -101,13 +106,8 @@ the buzzes and the phone-app activity work. The other exercises are tuned on the
 
 ## Coming next
 
-- **Saved workouts (1.1):** build up to five workouts on your phone with the
-  [**workout builder**](https://rounoff.github.io/una-apps/AutoRep/builder/), copy each one into
-  AutoRep's settings in the UNA app, and start them from the top of the watch's mode list.
-- **Workout plans, set from the watch:** chain several blocks into one workout (for example EMOM
-  5 min of squats, rest 60 s, Tabata jumping jacks, rest 60 s, AMRAP 5 min of curls), each with its
-  own format, exercise, target and rest. Built on the watch with the same lists, run as one
-  activity, with a summary per block.
+- **Workout plans built on the watch:** the same chained blocks as the workout builder's, set up
+  with the watch's own lists, no phone needed.
 
 ## Feedback
 
