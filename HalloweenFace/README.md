@@ -1,3 +1,7 @@
+
+
+
+
 <div align="center">
 
 # Theme (Halloween!) Face by RF
@@ -14,9 +18,9 @@ over by itself.
 
 ## Demo
 
-<img src="images/demo.gif" alt="Halloween night, then Bonfire Night, then a Thanksgiving day" width="240">
+https://github.com/user-attachments/assets/ca5513d0-5b20-4045-9863-e73b18d341a2
 
-Halloween night, Bonfire Night, then a Thanksgiving day: every minute the scene comes alive for a
+Halloween night, Bonfire Night, then a Thanksgiving day, more coming...: every minute the scene comes alive for a
 few seconds.
 
 ## Why
