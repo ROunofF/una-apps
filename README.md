@@ -22,7 +22,10 @@ show what's already reported, so check there first and add a 👍 to the ones yo
 |---|---|
 | [**AutoRep by RF**](AutoRep/) | A Sets / EMOM / AMRAP / Tabata timer that counts your reps automatically from wrist motion (baseline set on your first 3 reps), with heart rate and tempo. Coming in 1.1: plan workouts on your phone with the [**workout builder**](https://rounoff.github.io/una-apps/AutoRep/builder/). |
 | [**PomoTimer by RF**](PomoTimer/) | A Pomodoro focus timer: timed focus sessions and breaks, a buzz at every change, a long break after each set, and it keeps running when you leave the app. |
+| [**Theme (Halloween!) Face by RF**](HalloweenFace/) | A Halloween watch face: a haunted hill under a sky that follows your day, with lit windows, a glowing jack-o'-lantern, bats and a ghost after dark, and a countdown to Halloween in October. |
 
 <a href="AutoRep/"><img src="AutoRep/images/hero_3_watches.png" alt="AutoRep on three UNA watches" width="600"></a>
 
 <a href="PomoTimer/"><img src="PomoTimer/images/hero_3_watches.png" alt="PomoTimer on three UNA watches" width="600"></a>
+
+<a href="HalloweenFace/"><img src="HalloweenFace/images/hero_3_watches.png" alt="The Halloween face on three UNA watches" width="600"></a>
