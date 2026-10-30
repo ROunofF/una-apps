@@ -60,6 +60,7 @@ real-world accuracy the app hasn't shown on a real wrist.
 | App | Project | Store ID | Status |
 |---|---|---|---|
 | AutoRep by RF | `~/STM32Cube/unawatch-autorep` | `AD5202A23D2FEE00` | v0.9.7; page updated 2026-10-24 (round store previews, watch-look mockups, 6 screens, "Coming next": workout plans); video and phone-app screenshot to add |
+| HabitsTracker by RF | `~/STM32Cube/unawatch-habitsTracker` | `769FFE92940C11E2` | v0.3.0 (the streak version) released on the store 2026-10-29 (zip from dceaf52 on feature/streak); page updated 2026-10-29 for 0.3.0 (hero + 6 screens from the DEV=0 simulator, watch look); video and the real-wrist "Tested" line to add |
 | PomoTimer by RF | `~/STM32Cube/unawatch-pomodoro` | `EBD6F3D4E1035F74` | v0.4.1 on the store; page added 2026-10-27 (hero + 6 screens, from the 0.4.1 simulator frames); video to add |
 | Theme (Halloween!) Face by RF | `~/STM32Cube/unawatch-halloweenface` | `9A25EE3448337D5D` | Watch face; v1.0.0 on the store 2026-10-29 (tested on the watch); v1.1.0 (Bonfire Night, Thanksgiving, auto themes, phone settings) packaged 2026-10-29, simulator-tested; page updated 2026-10-29 for 1.1.0 (hero + 6 screens + demo GIF from the 1.1.0 store previews, watch look); RF's 2nd competition entry |
 

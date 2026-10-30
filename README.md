@@ -21,10 +21,13 @@ show what's already reported, so check there first and add a 👍 to the ones yo
 | App | What it does |
 |---|---|
 | [**AutoRep by RF**](AutoRep/) | A Sets / EMOM / AMRAP / Tabata timer that counts your reps automatically from wrist motion (baseline set on your first 3 reps), with heart rate and tempo. Coming in 1.1: plan workouts on your phone with the [**workout builder**](https://rounoff.github.io/una-apps/AutoRep/builder/). |
+| [**HabitsTracker by RF**](HabitsTracker/) | A streak calculator on your wrist: at the time you pick, the watch buzzes with what to do and what each answer does to your streak ("Done: 13 days", "Skip: back to 0"). Big streaks, a week of dots, and stars you keep. Set up on your phone. |
 | [**PomoTimer by RF**](PomoTimer/) | A Pomodoro focus timer: timed focus sessions and breaks, a buzz at every change, a long break after each set, and it keeps running when you leave the app. |
 | [**Theme (Halloween!) Face by RF**](HalloweenFace/) | A watch face that follows the seasons: a pixel-art scene for the next holiday (Halloween, Bonfire Night, Thanksgiving so far) under a sky that follows your day, with a countdown, and the next theme taking over by itself. Info lines set in the UNA app. |
 
 <a href="AutoRep/"><img src="AutoRep/images/hero_3_watches.png" alt="AutoRep on three UNA watches" width="600"></a>
+
+<a href="HabitsTracker/"><img src="HabitsTracker/images/hero_3_watches.png" alt="HabitsTracker on three UNA watches" width="600"></a>
 
 <a href="PomoTimer/"><img src="PomoTimer/images/hero_3_watches.png" alt="PomoTimer on three UNA watches" width="600"></a>
 

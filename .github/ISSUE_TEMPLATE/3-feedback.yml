@@ -9,6 +9,7 @@ body:
       label: Which app?
       options:
         - AutoRep by RF
+        - HabitsTracker by RF
         - PomoTimer by RF
         - "Theme (Halloween!) Face by RF"
         - AutoRep workout builder (website)
